@@ -4,45 +4,55 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Lacak antrian pasien Bone Hacker dengan fitur pencarian, mode gelap otomatis, dan detail per cabang yang bisa diperluas." />
-  <link rel="icon" href="https://placehold.co/32x32/1D4ED8/FFFFFF?text=BH" type="image/png">
+  <link rel="icon" href="https://placehold.co/32x32/007AFF/FFFFFF?text=BH" type="image/png">
 
   <title>Antrian Bone Hacker (Pencarian & Detail)</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- [IMPROVEMENT] Apple-like font (Inter) -->
+  <link rel="preconnect" href="https://rsms.me/">
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+  
   <style>
+    /* [IMPROVEMENT] Apple-like design system */
     :root {
-      --bg-main: #f9fafb; /* gray-50 */
+      --bg-main: #f5f5f7; /* Off-white background */
       --bg-card: #ffffff;
-      --bg-subtle: #f3f4f6; /* gray-100 */
-      --text-primary: #1f2937; /* gray-800 */
-      --text-secondary: #4b5563; /* gray-600 */
-      --border-color: #e5e7eb; /* gray-200 */
-      --accent-color: #2563eb; /* blue-600 */
-      --highlight-bg: #fef3c7; /* amber-100 */
+      --text-primary: #1d1d1f; /* Near-black for text */
+      --text-secondary: #6e6e73; /* Gray for secondary text */
+      --border-color: rgba(0, 0, 0, 0.1);
+      --accent-color: #007aff; /* Apple's signature blue */
+      --highlight-bg: rgba(0, 122, 255, 0.1);
+      
+      --status-waiting: #ff9500; /* Apple Orange */
+      --status-in-treatment: #007aff; /* Apple Blue */
+      --status-completed: #34c759; /* Apple Green */
+      
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     }
 
     html.dark {
-      --bg-main: #111827; /* gray-900 */
-      --bg-card: #1f2937; /* gray-800 */
-      --bg-subtle: #374151; /* gray-700 */
-      --text-primary: #f9fafb; /* gray-50 */
-      --text-secondary: #9ca3af; /* gray-400 */
-      --border-color: #4b5563; /* gray-600 */
-      --highlight-bg: #4338ca; /* indigo-700 */
+      --bg-main: #000000;
+      --bg-card: #1c1c1e;
+      --text-primary: #f5f5f7;
+      --text-secondary: #8e8e93;
+      --border-color: rgba(255, 255, 255, 0.15);
+      --highlight-bg: rgba(0, 122, 255, 0.25);
     }
 
     body {
       background-color: var(--bg-main);
       color: var(--text-primary);
       transition: background-color 0.3s, color 0.3s;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    .status-waiting { color: #f59e0b; }
-    .status-in-treatment { color: #3b82f6; }
-    .status-completed { color: #22c55e; }
+    .status-waiting { color: var(--status-waiting); }
+    .status-in-treatment { color: var(--status-in-treatment); }
+    .status-completed { color: var(--status-completed); }
 
-    /* Gaya untuk dropdown/accordion */
     .details-content {
       max-height: 0;
       overflow: hidden;
@@ -50,7 +60,7 @@
     }
 
     .details-content.open {
-      max-height: 1000px; /* Cukup besar untuk menampung tabel */
+      max-height: 1000px;
     }
     
     .toggle-arrow {
@@ -60,34 +70,33 @@
         transform: rotate(180deg);
     }
     
-    /* Gaya untuk highlight pencarian */
     .highlight-row {
         background-color: var(--highlight-bg);
     }
   </style>
 </head>
-<body class="min-h-screen text-sm font-sans">
+<body class="min-h-screen text-sm">
   <div class="container mx-auto p-4 max-w-6xl">
     
     <!-- HEADER -->
-    <header class="mb-6 text-center">
-        <h1 class="text-3xl font-extrabold" style="color: var(--accent-color);">Daftar Antrian Bone Hacker</h1>
-        <p class="mt-1" style="color: var(--text-secondary);">Lacak status pasien di semua cabang secara real-time.</p>
+    <header class="mb-8 text-center">
+        <h1 class="text-4xl font-bold" style="color: var(--text-primary);">Daftar Antrian</h1>
+        <p class="mt-2 text-lg" style="color: var(--text-secondary);">Bone Hacker Live Status</p>
     </header>
 
     <!-- Ringkasan total semua cabang -->
-    <section id="totalSummaryContainer" class="mb-6 p-4 rounded-lg shadow-sm" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
+    <section id="totalSummaryContainer" class="mb-6 p-5 rounded-2xl shadow-sm" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
         <!-- Konten ringkasan total akan di-inject oleh JavaScript -->
     </section>
 
     <!-- KONTROL: PENCARIAN & DARK MODE -->
-    <div class="flex flex-col sm:flex-row gap-4 mb-6 sticky top-0 py-2 z-10" style="background-color: var(--bg-main);">
+    <div class="flex flex-col sm:flex-row gap-3 mb-6 sticky top-0 py-3 z-10" style="background-color: var(--bg-main);">
         <div class="relative flex-grow">
-            <input type="text" id="searchInput" placeholder="Cari nama pasien di semua cabang..." class="w-full pl-10 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none" style="background-color: var(--bg-card); border-color: var(--border-color);">
-            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" id="searchInput" placeholder="Cari nama pasien..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-blue-500 outline-none" style="background-color: var(--bg-card);">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
-        <button id="toggleAllBtn" class="p-2 px-4 rounded-lg flex-shrink-0 text-sm font-semibold" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">Buka Semua</button>
-        <button id="darkModeToggle" class="p-2 rounded-lg flex-shrink-0" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
+        <button id="toggleAllBtn" class="p-2.5 px-4 rounded-xl flex-shrink-0 text-sm font-semibold" style="background-color: var(--bg-card);">Buka Semua</button>
+        <button id="darkModeToggle" class="p-2.5 rounded-xl flex-shrink-0" style="background-color: var(--bg-card);">
             <svg id="sunIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             <svg id="moonIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
         </button>
@@ -173,22 +182,22 @@
 
     function createBranchCard(code, name) {
         return `
-            <section id="branch-${code}" class="branch-card flex flex-col rounded-lg shadow-sm" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
-                <div class="p-4">
+            <section id="branch-${code}" class="branch-card flex flex-col rounded-2xl shadow-sm" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
+                <div class="p-5">
                     <button class="toggle-details-btn w-full flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold">${name}</h2>
+                        <h2 class="text-lg font-semibold">${name}</h2>
                         <svg class="toggle-arrow w-5 h-5 flex-shrink-0" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div id="summary-${code}" class="grid grid-cols-4 gap-2 text-center">
                         <!-- Placeholder untuk status -->
-                        <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Menunggu</p></div>
-                        <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Terapi</p></div>
-                        <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Selesai</p></div>
-                        <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Total</p></div>
+                        <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Menunggu</p></div>
+                        <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Terapi</p></div>
+                        <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Selesai</p></div>
+                        <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Total</p></div>
                     </div>
                 </div>
                 <div class="details-content">
-                    <div id="details-${code}" class="p-4 border-t" style="border-color: var(--border-color);">Memuat data...</div>
+                    <div id="details-${code}" class="p-5 border-t" style="border-color: var(--border-color);">Memuat data...</div>
                 </div>
             </section>
         `;
@@ -211,20 +220,20 @@
 
         summaryEl.innerHTML = `
             <div>
-                <span class="text-2xl font-extrabold status-waiting">${waiting}</span>
-                <p class="text-xs font-medium" style="color: var(--text-secondary);">Menunggu</p>
+                <span class="text-3xl font-bold status-waiting">${waiting}</span>
+                <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Menunggu</p>
             </div>
             <div>
-                <span class="text-2xl font-extrabold status-in-treatment">${treating}</span>
-                <p class="text-xs font-medium" style="color: var(--text-secondary);">Terapi</p>
+                <span class="text-3xl font-bold status-in-treatment">${treating}</span>
+                <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Terapi</p>
             </div>
             <div>
-                <span class="text-2xl font-extrabold status-completed">${completed}</span>
-                <p class="text-xs font-medium" style="color: var(--text-secondary);">Selesai</p>
+                <span class="text-3xl font-bold status-completed">${completed}</span>
+                <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Selesai</p>
             </div>
             <div>
-                <span class="text-2xl font-extrabold" style="color: var(--text-primary);">${total}</span>
-                <p class="text-xs font-medium" style="color: var(--text-secondary);">Total</p>
+                <span class="text-3xl font-bold" style="color: var(--text-primary);">${total}</span>
+                <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Total</p>
             </div>
         `;
         
@@ -251,37 +260,36 @@
         document.getElementById('totalSummaryContainer').innerHTML = summaryHTML;
     }
 
-    // [IMPROVEMENT] Fungsi diperbarui untuk menangani 4 kolom
     function createTotalSummary(totals, isLoading = false) {
         let content;
         if (isLoading) {
             content = `
-                <div><span class="text-3xl font-extrabold">-</span><p class="text-sm font-medium" style="color: var(--text-secondary);">Total Menunggu</p></div>
-                <div><span class="text-3xl font-extrabold">-</span><p class="text-sm font-medium" style="color: var(--text-secondary);">Total Terapi</p></div>
-                <div><span class="text-3xl font-extrabold">-</span><p class="text-sm font-medium" style="color: var(--text-secondary);">Total Selesai</p></div>
-                <div><span class="text-3xl font-extrabold">-</span><p class="text-sm font-medium" style="color: var(--text-secondary);">Total Pasien</p></div>
+                <div><span class="text-4xl font-bold">-</span><p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Menunggu</p></div>
+                <div><span class="text-4xl font-bold">-</span><p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Terapi</p></div>
+                <div><span class="text-4xl font-bold">-</span><p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Selesai</p></div>
+                <div><span class="text-4xl font-bold">-</span><p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Pasien</p></div>
             `;
         } else {
             content = `
                 <div>
-                    <span class="text-3xl font-extrabold status-waiting">${totals.totalWaiting}</span>
-                    <p class="text-sm font-medium" style="color: var(--text-secondary);">Total Menunggu</p>
+                    <span class="text-4xl font-bold status-waiting">${totals.totalWaiting}</span>
+                    <p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Menunggu</p>
                 </div>
                 <div>
-                    <span class="text-3xl font-extrabold status-in-treatment">${totals.totalTreating}</span>
-                    <p class="text-sm font-medium" style="color: var(--text-secondary);">Total Terapi</p>
+                    <span class="text-4xl font-bold status-in-treatment">${totals.totalTreating}</span>
+                    <p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Terapi</p>
                 </div>
                 <div>
-                    <span class="text-3xl font-extrabold status-completed">${totals.totalCompleted}</span>
-                    <p class="text-sm font-medium" style="color: var(--text-secondary);">Total Selesai</p>
+                    <span class="text-4xl font-bold status-completed">${totals.totalCompleted}</span>
+                    <p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Selesai</p>
                 </div>
                 <div>
-                    <span class="text-3xl font-extrabold" style="color: var(--text-primary);">${totals.grandTotal}</span>
-                    <p class="text-sm font-medium" style="color: var(--text-secondary);">Total Pasien</p>
+                    <span class="text-4xl font-bold" style="color: var(--text-primary);">${totals.grandTotal}</span>
+                    <p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Pasien</p>
                 </div>
             `;
         }
-        return `<h2 class="text-xl font-bold text-center mb-4">Ringkasan Semua Cabang</h2><div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">${content}</div>`;
+        return `<h2 class="text-xl font-bold text-center mb-5">Ringkasan Semua Cabang</h2><div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">${content}</div>`;
     }
 
     function createPatientTable(patients) {
@@ -291,18 +299,18 @@
                 <table class="min-w-full text-left text-xs">
                     <thead style="color: var(--text-secondary);">
                         <tr class="border-b" style="border-color: var(--border-color);">
-                            <th class="p-2">No</th>
-                            <th class="p-2">Nama</th>
-                            <th class="p-2">Status</th>
-                            <th class="p-2 text-center">Sisa Antrian</th>
+                            <th class="p-2 font-medium">No</th>
+                            <th class="p-2 font-medium">Nama</th>
+                            <th class="p-2 font-medium">Status</th>
+                            <th class="p-2 font-medium text-center">Sisa Antrian</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${sorted.map(p => `
                             <tr class="border-b" style="border-color: var(--bg-subtle);">
-                                <td class="p-2 font-bold">${sanitize(p.waitingNumber)}</td>
+                                <td class="p-2 font-semibold">${sanitize(p.waitingNumber)}</td>
                                 <td class="p-2">${sanitize(p.patientName)}</td>
-                                <td class="p-2 font-bold status-${p.status}">${translateStatus(p.status)}</td>
+                                <td class="p-2 font-semibold status-${p.status}">${translateStatus(p.status)}</td>
                                 <td class="p-2 text-center font-semibold">${p.status === STATUS.WAITING ? sanitize(p.queuePosition) : '-'}</td>
                             </tr>
                         `).join('')}
