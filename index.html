@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Lacak antrian pasien Bone Hacker dengan fitur pencarian, mode gelap otomatis, dan detail per cabang yang bisa diperluas." />
+  <link rel="icon" href="https://placehold.co/32x32/1D4ED8/FFFFFF?text=BH" type="image/png">
+
+  <title>Antrian Bone Hacker (Pencarian & Detail)</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    :root {
+      --bg-main: #f9fafb; /* gray-50 */
+      --bg-card: #ffffff;
+      --bg-subtle: #f3f4f6; /* gray-100 */
+      --text-primary: #1f2937; /* gray-800 */
+      --text-secondary: #4b5563; /* gray-600 */
+      --border-color: #e5e7eb; /* gray-200 */
+      --accent-color: #2563eb; /* blue-600 */
+    }
+
+    html.dark {
+      --bg-main: #111827; /* gray-900 */
+      --bg-card: #1f2937; /* gray-800 */
+      --bg-subtle: #374151; /* gray-700 */
+      --text-primary: #f9fafb; /* gray-50 */
+      --text-secondary: #9ca3af; /* gray-400 */
+      --border-color: #4b5563; /* gray-600 */
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .status-waiting { color: #f59e0b; }
+    .status-in-treatment { color: #3b82f6; }
+    .status-completed { color: #22c55e; }
+
+    /* Gaya untuk dropdown/accordion */
+    .details-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+    }
+
+    .details-content.open {
+      max-height: 1000px; /* Cukup besar untuk menampung tabel */
+    }
+    
+    .toggle-arrow {
+        transition: transform 0.3s ease-out;
+    }
+    .open .toggle-arrow {
+        transform: rotate(180deg);
+    }
+  </style>
+</head>
+<body class="min-h-screen text-sm font-sans">
+  <div class="container mx-auto p-4 max-w-6xl">
+    
+    <!-- HEADER -->
+    <header class="mb-6 text-center">
+        <h1 class="text-3xl font-extrabold" style="color: var(--accent-color);">Daftar Antrian Bone Hacker</h1>
+        <p class="mt-1" style="color: var(--text-secondary);">Lacak status pasien di semua cabang secara real-time.</p>
+    </header>
+
+    <!-- KONTROL: PENCARIAN & DARK MODE -->
+    <div class="flex flex-col sm:flex-row gap-4 mb-6 sticky top-0 py-2 z-10" style="background-color: var(--bg-main);">
+        <div class="relative flex-grow">
+            <input type="text" id="searchInput" placeholder="Cari nama pasien di semua cabang..." class="w-full pl-10 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <button id="darkModeToggle" class="p-2 rounded-lg flex-shrink-0" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
+            <svg id="sunIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <svg id="moonIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        </button>
+    </div>
+
+    <!-- [IMPROVEMENT] Menggunakan grid layout yang responsif -->
+    <main id="branchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Branch cards will be injected here -->
+    </main>
+
+    <footer class="text-center mt-8 text-xs" style="color: var(--text-secondary);">
+      <p>Terakhir diperbarui: <span id="lastUpdated" class="font-semibold">-</span></p>
+    </footer>
+  </div>
+
+  <script>
+    // --- KONFIGURASI ---
+    const REFRESH_INTERVAL = 300000; // 5 menit
+    const STATUS = { WAITING: 'waiting', IN_TREATMENT: 'in-treatment', COMPLETED: 'completed' };
+    const BRANCHES = {
+      PWT: { name: "Purwokerto", url: "https://script.google.com/macros/s/AKfycbzKpxIOF2VABpGLbDRj9-9Bi2Gwi-urycCnScYhbn26Fy2GQqQGueMyqR6X7F8fkQaO/exec" },
+      PBG: { name: "Purbalingga", url: "https://script.google.com/macros/s/AKfycbzNl_rDqQth6SYdyzhxGM41TJqbAKnU5ntBc3gOiZiaTfw06QBMEIK4ZpdZ-amHINO7/exec" },
+      PML: { name: "Pemalang", url: "https://script.google.com/macros/s/AKfycby2cEq-so0BSvjiaq_NRBtef4tjWYNzHPlmBepxruTw91ZJ0-ogmVyEPDx4onfs9LLEug/exec" },
+      CLP: { name: "Cilacap", url: "https://script.google.com/macros/s/AKfycby_IDkfLVK2M-_olnNLQYOdMyYNR8PNzl61FHSeXi3dFtNiXP_F_6RJ1i2CuWJfNPlEnA/exec" },
+      KDJ: { name: "Kedungreja", url: "https://script.google.com/macros/s/AKfycbzy9e4KtvXQ_hQWWhRBiNSHJd04__ukSJeTKXOpAZ7EQPlcsaM2z6p7lhNwhclekQ21Bw/exec" },
+      BTG: { name: "Batang", url: "https://script.google.com/macros/s/AKfycbwqqMJ4Nlb21PCPNmQy6mW-iglJ9jKB3aM-rC3Y74RTpEadGaVFpV0krkxUeqAxuU353w/exec" },
+      PKL: { name: "Pekalongan", url: "https://script.google.com/macros/s/AKfycbyXR-Yk5WPa5M5BdXWna2RXTCaLp-R8kG-iDtuqUkeoCz9iTTJZGkuqIqTk4-5t9jsU/exec" },
+      TSK: { name: "Tasikmalaya", url: "https://script.google.com/macros/s/AKfycbz_rWQbliw98LBgl3QNuzgFXfhN6fH2Bga0IeLCUU2S-4c6NtGHtpM9Nq7kpG5_MmwglQ/exec" },
+      JGJ: { name: "Jogja", url: "https://script.google.com/macros/s/AKfycbxw3racKI3t4J_4VvzcZNcMfLjgF7qzsHlcL0zENLgrGVc_kJ_vctxpgL0rQIHcp4A8/exec" }
+    };
+    let allPatientsData = {};
+
+    // --- FUNGSI UTAMA ---
+    document.addEventListener('DOMContentLoaded', init);
+
+    function init() {
+        setupDarkMode();
+        renderAllBranchSkeletons();
+        setupEventListeners();
+        fetchAllData();
+        setInterval(fetchAllData, REFRESH_INTERVAL);
+    }
+
+    function setupEventListeners() {
+        document.getElementById('searchInput').addEventListener('input', handleSearch);
+        document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+        document.getElementById('branchesContainer').addEventListener('click', function(e) {
+            const button = e.target.closest('.toggle-details-btn');
+            if (button) {
+                const content = button.nextElementSibling;
+                content.classList.toggle('open');
+                button.classList.toggle('open');
+            }
+        });
+    }
+
+    async function fetchAllData() {
+        const fetchPromises = Object.entries(BRANCHES).map(async ([code, branch]) => {
+            try {
+                const response = await fetch(branch.url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                allPatientsData[code] = data;
+                updateBranchUI(code, data);
+            } catch (error) {
+                console.error(`Gagal memuat data untuk ${branch.name}:`, error);
+                updateBranchUI(code, null, true); // Pass error flag
+            }
+        });
+        await Promise.all(fetchPromises);
+        const now = new Date().toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit', timeZone: "Asia/Jakarta" });
+        document.getElementById('lastUpdated').textContent = `${now} WIB`;
+    }
+
+    // --- RENDER & UPDATE UI ---
+    function renderAllBranchSkeletons() {
+        const container = document.getElementById('branchesContainer');
+        container.innerHTML = Object.entries(BRANCHES).map(([code, branch]) => createBranchCard(code, branch.name)).join('');
+    }
+
+    // [IMPROVEMENT] Kartu didesain ulang untuk tampilan grid
+    function createBranchCard(code, name) {
+        return `
+            <section id="branch-${code}" class="branch-card flex flex-col rounded-lg shadow-sm" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
+                <div class="p-4 flex-grow">
+                    <h2 class="text-lg font-bold text-center mb-4">${name}</h2>
+                    <div id="summary-${code}" class="grid grid-cols-3 gap-2 text-center">
+                        <!-- Placeholder untuk status, agar tidak ada lompatan layout -->
+                        <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Menunggu</p></div>
+                        <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Terapi</p></div>
+                        <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Selesai</p></div>
+                    </div>
+                </div>
+                <div class="border-t" style="border-color: var(--border-color);">
+                    <button class="toggle-details-btn w-full p-3 text-sm font-semibold flex justify-center items-center gap-2" style="color: var(--text-secondary);">
+                        <span>Lihat Detail</span>
+                        <svg class="toggle-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="details-content">
+                        <div id="details-${code}" class="p-4 border-t" style="border-color: var(--border-color);">Memuat data...</div>
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    // [IMPROVEMENT] Memperbarui ringkasan dengan teks lebih besar dan tebal
+    function updateBranchUI(code, patients, isError = false) {
+        const summaryEl = document.getElementById(`summary-${code}`);
+        const detailsEl = document.getElementById(`details-${code}`);
+
+        if (isError) {
+            summaryEl.innerHTML = `<div class="col-span-3 text-red-500 font-semibold p-4">Gagal memuat</div>`;
+            detailsEl.innerHTML = `<p class="text-red-500">Tidak dapat mengambil data untuk cabang ini.</p>`;
+            return;
+        }
+
+        const waiting = patients.filter(p => p.status === STATUS.WAITING).length;
+        const treating = patients.filter(p => p.status === STATUS.IN_TREATMENT).length;
+        const completed = patients.filter(p => p.status === STATUS.COMPLETED).length;
+
+        summaryEl.innerHTML = `
+            <div>
+                <span class="text-2xl font-extrabold status-waiting">${waiting}</span>
+                <p class="text-xs font-medium" style="color: var(--text-secondary);">Menunggu</p>
+            </div>
+            <div>
+                <span class="text-2xl font-extrabold status-in-treatment">${treating}</span>
+                <p class="text-xs font-medium" style="color: var(--text-secondary);">Terapi</p>
+            </div>
+            <div>
+                <span class="text-2xl font-extrabold status-completed">${completed}</span>
+                <p class="text-xs font-medium" style="color: var(--text-secondary);">Selesai</p>
+            </div>
+        `;
+        
+        if (patients.length === 0) {
+            detailsEl.innerHTML = `<p style="color: var(--text-secondary);">Tidak ada antrian untuk hari ini.</p>`;
+        } else {
+            detailsEl.innerHTML = createPatientTable(patients);
+        }
+    }
+
+    function createPatientTable(patients) {
+        const sorted = [...patients].sort((a, b) => (a.waitingNumber || 0) - (b.waitingNumber || 0));
+        return `
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-left text-xs">
+                    <thead style="color: var(--text-secondary);">
+                        <tr class="border-b" style="border-color: var(--border-color);">
+                            <th class="p-2">No</th>
+                            <th class="p-2">Nama</th>
+                            <th class="p-2">Status</th>
+                            <th class="p-2 text-center">Sisa Antrian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sorted.map(p => `
+                            <tr class="border-b" style="border-color: var(--bg-subtle);">
+                                <td class="p-2 font-bold">${sanitize(p.waitingNumber)}</td>
+                                <td class="p-2">${sanitize(p.patientName)}</td>
+                                <td class="p-2 font-bold status-${p.status}">${translateStatus(p.status)}</td>
+                                <td class="p-2 text-center font-semibold">${p.status === STATUS.WAITING ? sanitize(p.queuePosition) : '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    // --- EVENT HANDLERS & UTILITAS ---
+    function handleSearch(e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        document.querySelectorAll('.branch-card').forEach(card => {
+            const code = card.id.split('-')[1];
+            const patients = allPatientsData[code];
+            if (!patients || searchTerm === '') {
+                card.style.display = 'flex'; // Use flex because the card is a flex container
+                return;
+            }
+            const match = patients.some(p => p.patientName.toLowerCase().includes(searchTerm));
+            card.style.display = match ? 'flex' : 'none';
+            // Buka otomatis jika ada hasil dan belum terbuka
+            const detailsContent = card.querySelector('.details-content');
+            if (match && !detailsContent.classList.contains('open')) {
+                card.querySelector('.toggle-details-btn').classList.add('open');
+                detailsContent.classList.add('open');
+            }
+        });
+    }
+
+    function setupDarkMode() {
+        const hour = new Date().getHours();
+        // Otomatis mode gelap antara jam 6 sore (18) dan 6 pagi (6)
+        const isNight = hour >= 18 || hour < 6;
+        const userPreference = localStorage.getItem('darkMode');
+        
+        if ((userPreference === 'true') || (userPreference === null && isNight)) {
+            document.documentElement.classList.add('dark');
+            updateDarkModeIcons(true);
+        } else {
+            updateDarkModeIcons(false);
+        }
+    }
+
+    function toggleDarkMode() {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('darkMode', isDark);
+        updateDarkModeIcons(isDark);
+    }
+
+    function updateDarkModeIcons(isDark) {
+        document.getElementById('sunIcon').style.display = isDark ? 'none' : 'block';
+        document.getElementById('moonIcon').style.display = isDark ? 'block' : 'none';
+    }
+
+    function translateStatus(status) {
+        const map = { [STATUS.WAITING]: 'Menunggu', [STATUS.IN_TREATMENT]: 'Terapi', [STATUS.COMPLETED]: 'Selesai' };
+        return map[status] || status;
+    }
+
+    function sanitize(str) {
+        if (!str) return '';
+        const temp = document.createElement('div');
+        temp.textContent = String(str);
+        return temp.innerHTML;
+    }
+  </script>
+</body>
+</html>
