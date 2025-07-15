@@ -19,6 +19,7 @@
       --text-secondary: #4b5563; /* gray-600 */
       --border-color: #e5e7eb; /* gray-200 */
       --accent-color: #2563eb; /* blue-600 */
+      --highlight-bg: #fef3c7; /* amber-100 */
     }
 
     html.dark {
@@ -28,6 +29,7 @@
       --text-primary: #f9fafb; /* gray-50 */
       --text-secondary: #9ca3af; /* gray-400 */
       --border-color: #4b5563; /* gray-600 */
+      --highlight-bg: #4338ca; /* indigo-700 */
     }
 
     body {
@@ -57,6 +59,11 @@
     .open .toggle-arrow {
         transform: rotate(180deg);
     }
+    
+    /* Gaya untuk highlight pencarian */
+    .highlight-row {
+        background-color: var(--highlight-bg);
+    }
   </style>
 </head>
 <body class="min-h-screen text-sm font-sans">
@@ -74,13 +81,14 @@
             <input type="text" id="searchInput" placeholder="Cari nama pasien di semua cabang..." class="w-full pl-10 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none" style="background-color: var(--bg-card); border-color: var(--border-color);">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
+        <button id="toggleAllBtn" class="p-2 px-4 rounded-lg flex-shrink-0 text-sm font-semibold" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">Buka Semua</button>
         <button id="darkModeToggle" class="p-2 rounded-lg flex-shrink-0" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
             <svg id="sunIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             <svg id="moonIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
         </button>
     </div>
 
-    <!-- [IMPROVEMENT] Menggunakan grid layout yang responsif -->
+    <!-- Menggunakan grid layout yang responsif -->
     <main id="branchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Branch cards will be injected here -->
     </main>
@@ -121,10 +129,11 @@
     function setupEventListeners() {
         document.getElementById('searchInput').addEventListener('input', handleSearch);
         document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+        document.getElementById('toggleAllBtn').addEventListener('click', toggleAllDetails);
         document.getElementById('branchesContainer').addEventListener('click', function(e) {
             const button = e.target.closest('.toggle-details-btn');
             if (button) {
-                const content = button.nextElementSibling;
+                const content = button.parentElement.querySelector('.details-content');
                 content.classList.toggle('open');
                 button.classList.toggle('open');
             }
@@ -155,33 +164,29 @@
         container.innerHTML = Object.entries(BRANCHES).map(([code, branch]) => createBranchCard(code, branch.name)).join('');
     }
 
-    // [IMPROVEMENT] Kartu didesain ulang untuk tampilan grid
+    // [IMPROVEMENT] Kartu didesain ulang dengan header sebagai tombol
     function createBranchCard(code, name) {
         return `
             <section id="branch-${code}" class="branch-card flex flex-col rounded-lg shadow-sm" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
-                <div class="p-4 flex-grow">
-                    <h2 class="text-lg font-bold text-center mb-4">${name}</h2>
+                <div class="p-4">
+                    <button class="toggle-details-btn w-full flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold">${name}</h2>
+                        <svg class="toggle-arrow w-5 h-5 flex-shrink-0" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
                     <div id="summary-${code}" class="grid grid-cols-3 gap-2 text-center">
-                        <!-- Placeholder untuk status, agar tidak ada lompatan layout -->
+                        <!-- Placeholder untuk status -->
                         <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Menunggu</p></div>
                         <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Terapi</p></div>
                         <div><span class="text-2xl font-extrabold">-</span><p class="text-xs" style="color: var(--text-secondary);">Selesai</p></div>
                     </div>
                 </div>
-                <div class="border-t" style="border-color: var(--border-color);">
-                    <button class="toggle-details-btn w-full p-3 text-sm font-semibold flex justify-center items-center gap-2" style="color: var(--text-secondary);">
-                        <span>Lihat Detail</span>
-                        <svg class="toggle-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div class="details-content">
-                        <div id="details-${code}" class="p-4 border-t" style="border-color: var(--border-color);">Memuat data...</div>
-                    </div>
+                <div class="details-content">
+                    <div id="details-${code}" class="p-4 border-t" style="border-color: var(--border-color);">Memuat data...</div>
                 </div>
             </section>
         `;
     }
 
-    // [IMPROVEMENT] Memperbarui ringkasan dengan teks lebih besar dan tebal
     function updateBranchUI(code, patients, isError = false) {
         const summaryEl = document.getElementById(`summary-${code}`);
         const detailsEl = document.getElementById(`details-${code}`);
@@ -249,27 +254,62 @@
     // --- EVENT HANDLERS & UTILITAS ---
     function handleSearch(e) {
         const searchTerm = e.target.value.toLowerCase().trim();
+        document.querySelectorAll('.highlight-row').forEach(row => row.classList.remove('highlight-row'));
+
         document.querySelectorAll('.branch-card').forEach(card => {
             const code = card.id.split('-')[1];
             const patients = allPatientsData[code];
             if (!patients || searchTerm === '') {
-                card.style.display = 'flex'; // Use flex because the card is a flex container
+                card.style.display = 'flex';
                 return;
             }
-            const match = patients.some(p => p.patientName.toLowerCase().includes(searchTerm));
-            card.style.display = match ? 'flex' : 'none';
-            // Buka otomatis jika ada hasil dan belum terbuka
-            const detailsContent = card.querySelector('.details-content');
-            if (match && !detailsContent.classList.contains('open')) {
-                card.querySelector('.toggle-details-btn').classList.add('open');
-                detailsContent.classList.add('open');
+            const matchingPatients = patients.filter(p => p.patientName.toLowerCase().includes(searchTerm));
+            const hasMatch = matchingPatients.length > 0;
+            
+            card.style.display = hasMatch ? 'flex' : 'none';
+            
+            if (hasMatch) {
+                const detailsContent = card.querySelector('.details-content');
+                if (!detailsContent.classList.contains('open')) {
+                    card.querySelector('.toggle-details-btn').classList.add('open');
+                    detailsContent.classList.add('open');
+                }
+                setTimeout(() => {
+                    const tableRows = card.querySelectorAll('tbody tr');
+                    tableRows.forEach(row => {
+                        const patientNameCell = row.children[1];
+                        if (patientNameCell && patientNameCell.textContent.toLowerCase().includes(searchTerm)) {
+                            row.classList.add('highlight-row');
+                        }
+                    });
+                }, 10);
             }
         });
+    }
+    
+    function toggleAllDetails() {
+        const btn = document.getElementById('toggleAllBtn');
+        const isOpening = btn.textContent === 'Buka Semua';
+        
+        document.querySelectorAll('.branch-card').forEach(card => {
+            if (card.style.display !== 'none') {
+                const button = card.querySelector('.toggle-details-btn');
+                const content = card.querySelector('.details-content');
+                if (isOpening) {
+                    content.classList.add('open');
+                    button.classList.add('open');
+                } else {
+                    content.classList.remove('open');
+                    button.classList.remove('open');
+                }
+            }
+        });
+
+        btn.textContent = isOpening ? 'Tutup Semua' : 'Buka Semua';
     }
 
     function setupDarkMode() {
         const hour = new Date().getHours();
-        // Otomatis mode gelap antara jam 6 sore (18) dan 6 pagi (6)
         const isNight = hour >= 18 || hour < 6;
         const userPreference = localStorage.getItem('darkMode');
         
