@@ -10,24 +10,24 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- [IMPROVEMENT] Apple-like font (Inter) -->
   <link rel="preconnect" href="https://rsms.me/">
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
   
   <style>
-    /* [IMPROVEMENT] Apple-like design system */
     :root {
-      --bg-main: #f5f5f7; /* Off-white background */
+      --bg-main: #f5f5f7;
       --bg-card: #ffffff;
-      --text-primary: #1d1d1f; /* Near-black for text */
-      --text-secondary: #6e6e73; /* Gray for secondary text */
+      --bg-subtle: #f0f0f2;
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
       --border-color: rgba(0, 0, 0, 0.1);
-      --accent-color: #007aff; /* Apple's signature blue */
+      --accent-color: #007aff;
       --highlight-bg: rgba(0, 122, 255, 0.1);
+      --skeleton-bg: #dcdce0;
       
-      --status-waiting: #ff9500; /* Apple Orange */
-      --status-in-treatment: #007aff; /* Apple Blue */
-      --status-completed: #34c759; /* Apple Green */
+      --status-waiting: #ff9500;
+      --status-in-treatment: #007aff;
+      --status-completed: #34c759;
       
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     }
@@ -35,10 +35,12 @@
     html.dark {
       --bg-main: #000000;
       --bg-card: #1c1c1e;
+      --bg-subtle: #2c2c2e;
       --text-primary: #f5f5f7;
       --text-secondary: #8e8e93;
       --border-color: rgba(255, 255, 255, 0.15);
       --highlight-bg: rgba(0, 122, 255, 0.25);
+      --skeleton-bg: #3a3a3c;
     }
 
     body {
@@ -73,6 +75,48 @@
     .highlight-row {
         background-color: var(--highlight-bg);
     }
+
+    .skeleton {
+        background-color: var(--skeleton-bg);
+        border-radius: 0.5rem;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .tooltip-container {
+        position: relative;
+    }
+
+    .tooltip {
+        visibility: hidden;
+        opacity: 0;
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-10px);
+        background-color: var(--bg-subtle);
+        color: var(--text-secondary);
+        padding: 8px 12px;
+        border-radius: 8px;
+        width: max-content;
+        max-width: 200px;
+        z-index: 20;
+        font-size: 12px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        pointer-events: none;
+    }
+    
+    .tooltip-container:hover .tooltip {
+        visibility: visible;
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body class="min-h-screen text-sm">
@@ -96,6 +140,7 @@
             <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
         <button id="toggleAllBtn" class="p-2.5 px-4 rounded-xl flex-shrink-0 text-sm font-semibold" style="background-color: var(--bg-card);">Buka Semua</button>
+        <button id="sortBtn" class="p-2.5 px-4 rounded-xl flex-shrink-0 text-sm font-semibold transition-colors" style="background-color: var(--bg-card);">Urutkan</button>
         <button id="darkModeToggle" class="p-2.5 rounded-xl flex-shrink-0" style="background-color: var(--bg-card);">
             <svg id="sunIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             <svg id="moonIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -128,6 +173,7 @@
       JGJ: { name: "Jogja", url: "https://script.google.com/macros/s/AKfycbxw3racKI3t4J_4VvzcZNcMfLjgF7qzsHlcL0zENLgrGVc_kJ_vctxpgL0rQIHcp4A8/exec" }
     };
     let allPatientsData = {};
+    let isSortedByTotal = false;
 
     // --- FUNGSI UTAMA ---
     document.addEventListener('DOMContentLoaded', init);
@@ -144,12 +190,26 @@
         document.getElementById('searchInput').addEventListener('input', handleSearch);
         document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
         document.getElementById('toggleAllBtn').addEventListener('click', toggleAllDetails);
+        document.getElementById('sortBtn').addEventListener('click', sortBranchesByTotal);
+        
+        // [IMPROVEMENT] Event listener diubah untuk perilaku akordeon
         document.getElementById('branchesContainer').addEventListener('click', function(e) {
             const button = e.target.closest('.toggle-details-btn');
-            if (button) {
-                const content = button.parentElement.querySelector('.details-content');
-                content.classList.toggle('open');
-                button.classList.toggle('open');
+            if (!button) return;
+
+            const targetContent = button.parentElement.querySelector('.details-content');
+            const wasOpen = targetContent.classList.contains('open');
+
+            // Selalu tutup semua kartu terlebih dahulu
+            document.querySelectorAll('.details-content.open').forEach(openContent => {
+                openContent.classList.remove('open');
+                openContent.parentElement.querySelector('.toggle-details-btn').classList.remove('open');
+            });
+            
+            // Jika kartu yang diklik sebelumnya tidak terbuka, buka sekarang.
+            if (!wasOpen) {
+                targetContent.classList.add('open');
+                button.classList.add('open');
             }
         });
     }
@@ -164,7 +224,7 @@
                 updateBranchUI(code, data);
             } catch (error) {
                 console.error(`Gagal memuat data untuk ${branch.name}:`, error);
-                updateBranchUI(code, null, true); // Pass error flag
+                updateBranchUI(code, null, true);
             }
         });
         await Promise.all(fetchPromises);
@@ -176,24 +236,37 @@
     // --- RENDER & UPDATE UI ---
     function renderAllBranchSkeletons() {
         const container = document.getElementById('branchesContainer');
-        container.innerHTML = Object.entries(BRANCHES).map(([code, branch]) => createBranchCard(code, branch.name)).join('');
+        container.innerHTML = Object.entries(BRANCHES).map(([code, branch]) => createBranchCard(code, branch.name, true)).join('');
         document.getElementById('totalSummaryContainer').innerHTML = createTotalSummary(null, true);
     }
 
-    function createBranchCard(code, name) {
+    function createBranchCard(code, name, isLoading = false) {
+        let summaryContent;
+        if (isLoading) {
+            summaryContent = `
+                <div><div class="skeleton h-8 w-10 mx-auto"></div><div class="skeleton h-3 w-12 mx-auto mt-2"></div></div>
+                <div><div class="skeleton h-8 w-10 mx-auto"></div><div class="skeleton h-3 w-10 mx-auto mt-2"></div></div>
+                <div><div class="skeleton h-8 w-10 mx-auto"></div><div class="skeleton h-3 w-12 mx-auto mt-2"></div></div>
+                <div><div class="skeleton h-8 w-10 mx-auto"></div><div class="skeleton h-3 w-8 mx-auto mt-2"></div></div>
+            `;
+        } else {
+            summaryContent = `
+                <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Menunggu</p></div>
+                <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Terapi</p></div>
+                <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Selesai</p></div>
+                <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Total</p></div>
+            `;
+        }
+
         return `
             <section id="branch-${code}" class="branch-card flex flex-col rounded-2xl shadow-sm" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
                 <div class="p-5">
-                    <button class="toggle-details-btn w-full flex justify-between items-center mb-4">
+                    <button class="toggle-details-btn w-full flex justify-between items-center p-3 rounded-xl mb-4" style="background-color: var(--bg-subtle);">
                         <h2 class="text-lg font-semibold">${name}</h2>
                         <svg class="toggle-arrow w-5 h-5 flex-shrink-0" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div id="summary-${code}" class="grid grid-cols-4 gap-2 text-center">
-                        <!-- Placeholder untuk status -->
-                        <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Menunggu</p></div>
-                        <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Terapi</p></div>
-                        <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Selesai</p></div>
-                        <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Total</p></div>
+                        ${summaryContent}
                     </div>
                 </div>
                 <div class="details-content">
@@ -231,7 +304,7 @@
                 <span class="text-3xl font-bold status-completed">${completed}</span>
                 <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Selesai</p>
             </div>
-            <div>
+            <div class="p-1 rounded-lg" style="background-color: var(--bg-subtle);">
                 <span class="text-3xl font-bold" style="color: var(--text-primary);">${total}</span>
                 <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Total</p>
             </div>
@@ -246,17 +319,33 @@
     
     function updateTotalSummary() {
         let totalWaiting = 0, totalTreating = 0, totalCompleted = 0;
+        let waitingByBranch = [], treatingByBranch = [], completedByBranch = [], totalByBranch = [];
         
-        Object.values(allPatientsData).forEach(patients => {
+        Object.entries(allPatientsData).forEach(([code, patients]) => {
             if (Array.isArray(patients)) {
-                totalWaiting += patients.filter(p => p.status === STATUS.WAITING).length;
-                totalTreating += patients.filter(p => p.status === STATUS.IN_TREATMENT).length;
-                totalCompleted += patients.filter(p => p.status === STATUS.COMPLETED).length;
+                const waitingCount = patients.filter(p => p.status === STATUS.WAITING).length;
+                const treatingCount = patients.filter(p => p.status === STATUS.IN_TREATMENT).length;
+                const completedCount = patients.filter(p => p.status === STATUS.COMPLETED).length;
+                const totalCount = waitingCount + treatingCount + completedCount;
+
+                totalWaiting += waitingCount;
+                totalTreating += treatingCount;
+                totalCompleted += completedCount;
+
+                if (waitingCount > 0) waitingByBranch.push({ name: BRANCHES[code].name, count: waitingCount });
+                if (treatingCount > 0) treatingByBranch.push({ name: BRANCHES[code].name, count: treatingCount });
+                if (completedCount > 0) completedByBranch.push({ name: BRANCHES[code].name, count: completedCount });
+                if (totalCount > 0) totalByBranch.push({ name: BRANCHES[code].name, count: totalCount });
             }
         });
         
+        waitingByBranch.sort((a, b) => b.count - a.count);
+        treatingByBranch.sort((a, b) => b.count - a.count);
+        completedByBranch.sort((a, b) => b.count - a.count);
+        totalByBranch.sort((a, b) => b.count - a.count);
+
         const grandTotal = totalWaiting + totalTreating + totalCompleted;
-        const summaryHTML = createTotalSummary({ totalWaiting, totalTreating, totalCompleted, grandTotal });
+        const summaryHTML = createTotalSummary({ totalWaiting, totalTreating, totalCompleted, grandTotal, waitingByBranch, treatingByBranch, completedByBranch, totalByBranch });
         document.getElementById('totalSummaryContainer').innerHTML = summaryHTML;
     }
 
@@ -264,28 +353,37 @@
         let content;
         if (isLoading) {
             content = `
-                <div><span class="text-4xl font-bold">-</span><p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Menunggu</p></div>
-                <div><span class="text-4xl font-bold">-</span><p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Terapi</p></div>
-                <div><span class="text-4xl font-bold">-</span><p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Selesai</p></div>
-                <div><span class="text-4xl font-bold">-</span><p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Pasien</p></div>
+                <div><div class="skeleton h-10 w-16 mx-auto"></div><div class="skeleton h-4 w-24 mx-auto mt-2"></div></div>
+                <div><div class="skeleton h-10 w-16 mx-auto"></div><div class="skeleton h-4 w-20 mx-auto mt-2"></div></div>
+                <div><div class="skeleton h-10 w-16 mx-auto"></div><div class="skeleton h-4 w-24 mx-auto mt-2"></div></div>
+                <div><div class="skeleton h-10 w-16 mx-auto"></div><div class="skeleton h-4 w-20 mx-auto mt-2"></div></div>
             `;
         } else {
+            const waitingTooltip = totals.waitingByBranch.length > 0 ? totals.waitingByBranch.map(b => `<li>${b.name}: ${b.count}</li>`).join('') : '<li>Tidak ada antrian</li>';
+            const treatingTooltip = totals.treatingByBranch.length > 0 ? totals.treatingByBranch.map(b => `<li>${b.name}: ${b.count}</li>`).join('') : '<li>Tidak ada yang diterapi</li>';
+            const completedTooltip = totals.completedByBranch.length > 0 ? totals.completedByBranch.map(b => `<li>${b.name}: ${b.count}</li>`).join('') : '<li>Tidak ada yang selesai</li>';
+            const totalTooltip = totals.totalByBranch.length > 0 ? totals.totalByBranch.map(b => `<li>${b.name}: ${b.count}</li>`).join('') : '<li>Tidak ada pasien</li>';
+
             content = `
-                <div>
+                <div class="tooltip-container">
                     <span class="text-4xl font-bold status-waiting">${totals.totalWaiting}</span>
                     <p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Menunggu</p>
+                    <div class="tooltip"><ul>${waitingTooltip}</ul></div>
                 </div>
-                <div>
+                <div class="tooltip-container">
                     <span class="text-4xl font-bold status-in-treatment">${totals.totalTreating}</span>
                     <p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Terapi</p>
+                    <div class="tooltip"><ul>${treatingTooltip}</ul></div>
                 </div>
-                <div>
+                <div class="tooltip-container">
                     <span class="text-4xl font-bold status-completed">${totals.totalCompleted}</span>
                     <p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Selesai</p>
+                    <div class="tooltip"><ul>${completedTooltip}</ul></div>
                 </div>
-                <div>
+                <div class="tooltip-container">
                     <span class="text-4xl font-bold" style="color: var(--text-primary);">${totals.grandTotal}</span>
                     <p class="text-sm font-semibold" style="color: var(--text-secondary);">Total Pasien</p>
+                    <div class="tooltip"><ul>${totalTooltip}</ul></div>
                 </div>
             `;
         }
@@ -356,6 +454,42 @@
         });
     }
     
+    function sortBranchesByTotal() {
+        const container = document.getElementById('branchesContainer');
+        const cards = Array.from(container.querySelectorAll('.branch-card'));
+        const sortBtn = document.getElementById('sortBtn');
+
+        isSortedByTotal = !isSortedByTotal;
+
+        if (isSortedByTotal) {
+            cards.sort((a, b) => {
+                const codeA = a.id.split('-')[1];
+                const codeB = b.id.split('-')[1];
+                const patientsA = allPatientsData[codeA] || [];
+                const patientsB = allPatientsData[codeB] || [];
+                const totalA = Array.isArray(patientsA) ? patientsA.length : 0;
+                const totalB = Array.isArray(patientsB) ? patientsB.length : 0;
+                return totalB - totalA;
+            });
+            sortBtn.textContent = 'Urutan Default';
+            sortBtn.style.backgroundColor = 'var(--accent-color)';
+            sortBtn.style.color = '#fff';
+        } else {
+            const defaultOrder = Object.keys(BRANCHES);
+            cards.sort((a, b) => {
+                const codeA = a.id.split('-')[1];
+                const codeB = b.id.split('-')[1];
+                return defaultOrder.indexOf(codeA) - defaultOrder.indexOf(codeB);
+            });
+            sortBtn.textContent = 'Urutkan';
+            sortBtn.style.backgroundColor = 'var(--bg-card)';
+            const isDark = document.documentElement.classList.contains('dark');
+            sortBtn.style.color = isDark ? '#f5f5f7' : '#1d1d1f';
+        }
+
+        cards.forEach(card => container.appendChild(card));
+    }
+
     function toggleAllDetails() {
         const btn = document.getElementById('toggleAllBtn');
         const isOpening = btn.textContent === 'Buka Semua';
@@ -399,6 +533,10 @@
     function updateDarkModeIcons(isDark) {
         document.getElementById('sunIcon').style.display = isDark ? 'none' : 'block';
         document.getElementById('moonIcon').style.display = isDark ? 'block' : 'none';
+        const sortBtn = document.getElementById('sortBtn');
+        if (!isSortedByTotal) {
+            sortBtn.style.color = isDark ? '#f5f5f7' : '#1d1d1f';
+        }
     }
 
     function translateStatus(status) {
