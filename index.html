@@ -62,7 +62,8 @@
     }
 
     .details-content.open {
-      max-height: 1000px;
+      /* [IMPROVEMENT] Increased max-height to prevent scrolling on long lists */
+      max-height: 3000px; 
     }
     
     .toggle-arrow {
@@ -159,7 +160,7 @@
 
   <script>
     // --- KONFIGURASI ---
-    const REFRESH_INTERVAL = 300000; // 5 menit
+    const REFRESH_INTERVAL = 90000;
     const STATUS = { WAITING: 'waiting', IN_TREATMENT: 'in-treatment', COMPLETED: 'completed' };
     const BRANCHES = {
       PWT: { name: "Purwokerto", url: "https://script.google.com/macros/s/AKfycbzKpxIOF2VABpGLbDRj9-9Bi2Gwi-urycCnScYhbn26Fy2GQqQGueMyqR6X7F8fkQaO/exec" },
@@ -192,7 +193,6 @@
         document.getElementById('toggleAllBtn').addEventListener('click', toggleAllDetails);
         document.getElementById('sortBtn').addEventListener('click', sortBranchesByTotal);
         
-        // [IMPROVEMENT] Event listener diubah untuk perilaku akordeon
         document.getElementById('branchesContainer').addEventListener('click', function(e) {
             const button = e.target.closest('.toggle-details-btn');
             if (!button) return;
@@ -200,16 +200,28 @@
             const targetContent = button.parentElement.querySelector('.details-content');
             const wasOpen = targetContent.classList.contains('open');
 
-            // Selalu tutup semua kartu terlebih dahulu
             document.querySelectorAll('.details-content.open').forEach(openContent => {
                 openContent.classList.remove('open');
                 openContent.parentElement.querySelector('.toggle-details-btn').classList.remove('open');
             });
             
-            // Jika kartu yang diklik sebelumnya tidak terbuka, buka sekarang.
             if (!wasOpen) {
                 targetContent.classList.add('open');
                 button.classList.add('open');
+            }
+        });
+
+        document.getElementById('totalSummaryContainer').addEventListener('click', function(e) {
+            const container = e.target.closest('.tooltip-container');
+            if (container) {
+                if (container.classList.contains('active')) {
+                    container.classList.remove('active');
+                } else {
+                    document.querySelectorAll('.tooltip-container.active').forEach(activeEl => {
+                        activeEl.classList.remove('active');
+                    });
+                    container.classList.add('active');
+                }
             }
         });
     }
@@ -251,10 +263,10 @@
             `;
         } else {
             summaryContent = `
-                <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Menunggu</p></div>
-                <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Terapi</p></div>
-                <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Selesai</p></div>
-                <div><span class="text-3xl font-bold">-</span><p class="text-xs tracking-wide" style="color: var(--text-secondary);">Total</p></div>
+                <div><span class="text-3xl font-bold">-</span><p class="text-sm tracking-wide" style="color: var(--text-secondary);">Menunggu</p></div>
+                <div><span class="text-3xl font-bold">-</span><p class="text-sm tracking-wide" style="color: var(--text-secondary);">Terapi</p></div>
+                <div><span class="text-3xl font-bold">-</span><p class="text-sm tracking-wide" style="color: var(--text-secondary);">Selesai</p></div>
+                <div><span class="text-3xl font-bold">-</span><p class="text-sm tracking-wide" style="color: var(--text-secondary);">Total</p></div>
             `;
         }
 
@@ -292,21 +304,21 @@
         const total = waiting + treating + completed;
 
         summaryEl.innerHTML = `
-            <div>
+            <div class="pt-2" style="border-top: 3px solid var(--status-waiting);">
                 <span class="text-3xl font-bold status-waiting">${waiting}</span>
-                <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Menunggu</p>
+                <p class="text-sm tracking-wide font-medium" style="color: var(--text-secondary);">Menunggu</p>
             </div>
-            <div>
+            <div class="pt-2" style="border-top: 3px solid var(--status-in-treatment);">
                 <span class="text-3xl font-bold status-in-treatment">${treating}</span>
-                <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Terapi</p>
+                <p class="text-sm tracking-wide font-medium" style="color: var(--text-secondary);">Terapi</p>
             </div>
-            <div>
+            <div class="pt-2" style="border-top: 3px solid var(--status-completed);">
                 <span class="text-3xl font-bold status-completed">${completed}</span>
-                <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Selesai</p>
+                <p class="text-sm tracking-wide font-medium" style="color: var(--text-secondary);">Selesai</p>
             </div>
             <div class="p-1 rounded-lg" style="background-color: var(--bg-subtle);">
                 <span class="text-3xl font-bold" style="color: var(--text-primary);">${total}</span>
-                <p class="text-xs tracking-wide font-medium" style="color: var(--text-secondary);">Total</p>
+                <p class="text-sm tracking-wide font-medium" style="color: var(--text-secondary);">Total</p>
             </div>
         `;
         
@@ -400,7 +412,7 @@
                             <th class="p-2 font-medium">No</th>
                             <th class="p-2 font-medium">Nama</th>
                             <th class="p-2 font-medium">Status</th>
-                            <th class="p-2 font-medium text-center">Sisa Antrian</th>
+                            <th class="p-2 font-medium text-center">Posisi Antrian</th>
                         </tr>
                     </thead>
                     <tbody>
