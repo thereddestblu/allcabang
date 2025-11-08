@@ -24,11 +24,11 @@
       --accent-color: #007aff;
       --highlight-bg: rgba(0, 122, 255, 0.1);
       --skeleton-bg: #dcdce0;
-     
+    
       --status-waiting: #ff9500;
       --status-in-treatment: #007aff;
       --status-completed: #34c759;
-     
+    
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     }
 
@@ -122,7 +122,7 @@
 </head>
 <body class="min-h-screen text-sm">
   <div class="container mx-auto p-4 max-w-6xl">
-   
+    
     <header class="mb-8 text-center">
         <h1 class="text-4xl font-bold" style="color: var(--text-primary);">Daftar Antrian</h1>
         <p class="mt-2 text-lg" style="color: var(--text-secondary);">Bone Hacker Live Status</p>
@@ -163,7 +163,8 @@
       CLP: { name: "Cilacap", url: "https://script.google.com/macros/s/AKfycby_IDkfLVK2M-_olnNLQYOdMyYNR8PNzl61FHSeXi3dFtNiXP_F_6RJ1i2CuWJfNPlEnA/exec" },
       KDJ: { name: "Kedungreja", url: "https://script.google.com/macros/s/AKfycbzy9e4KtvXQ_hQWWhRBiNSHJd04__ukSJeTKXOpAZ7EQPlcsaM2z6p7lhNwhclekQ21Bw/exec" },
       BTG: { name: "Batang", url: "https://script.google.com/macros/s/AKfycbwqqMJ4Nlb21PCPNmQy6mW-iglJ9jKB3aM-rC3Y74RTpEadGaVFpV0krkxUeqAxuU353w/exec" },
-      TSK: { name: "Tasikmalaya", url: "https://script.google.com/macros/s/AKfycbz_rWQbliw98LBgl3QNuzgFXfhN6fH2Bga0IeLCUU2S-4c6NtGHtpM9Nq7kpG5_MmwglQ/exec" }
+      TSK: { name: "Tasikmalaya", url: "https://script.google.com/macros/s/AKfycbz_rWQbliw98LBgl3QNuzgFXfhN6fH2Bga0IeLCUU2S-4c6NtGHtpM9Nq7kpG5_MmwglQ/exec" },
+      KBN: { name: "Kebumen", url: "https://script.google.com/macros/s/AKfycbxpmIptOlmwe8WoA-67pkv9dNmtmX3AYdGH-D950_o7KJo-gV6nPgGWw3hX_UaHXN3r/exec" }
     };
     let allPatientsData = {};
     let isSortedByTotal = false;
@@ -184,7 +185,7 @@
         document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
         document.getElementById('toggleAllBtn').addEventListener('click', toggleAllDetails);
         document.getElementById('sortBtn').addEventListener('click', sortBranchesByTotal);
-     
+      
         document.getElementById('branchesContainer').addEventListener('click', function(e) {
             const button = e.target.closest('.toggle-details-btn');
             if (!button) return;
@@ -196,7 +197,7 @@
                 openContent.classList.remove('open');
                 openContent.parentElement.querySelector('.toggle-details-btn').classList.remove('open');
             });
-            
+          
             if (!wasOpen) {
                 targetContent.classList.add('open');
                 button.classList.add('open');
@@ -313,7 +314,7 @@
                 <p class="text-sm tracking-wide font-medium" style="color: var(--text-secondary);">Total</p>
             </div>
         `;
-        
+      
         if (patients.length === 0) {
             detailsEl.innerHTML = `<p style="color: var(--text-secondary);">Tidak ada antrian untuk hari ini.</p>`;
         } else {
@@ -324,7 +325,7 @@
     function updateTotalSummary() {
         let totalWaiting = 0, totalTreating = 0, totalCompleted = 0;
         let waitingByBranch = [], treatingByBranch = [], completedByBranch = [], totalByBranch = [];
-     
+      
         Object.entries(allPatientsData).forEach(([code, patients]) => {
             if (Array.isArray(patients)) {
                 const waitingCount = patients.filter(p => p.status === STATUS.WAITING).length;
@@ -342,7 +343,7 @@
                 if (totalCount > 0) totalByBranch.push({ name: BRANCHES[code].name, count: totalCount });
             }
         });
-     
+      
         waitingByBranch.sort((a, b) => b.count - a.count);
         treatingByBranch.sort((a, b) => b.count - a.count);
         completedByBranch.sort((a, b) => b.count - a.count);
@@ -436,9 +437,9 @@
             }
             const matchingPatients = patients.filter(p => p.patientName.toLowerCase().includes(searchTerm));
             const hasMatch = matchingPatients.length > 0;
-            
+          
             card.style.display = hasMatch ? 'flex' : 'none';
-            
+          
             if (hasMatch) {
                 const detailsContent = card.querySelector('.details-content');
                 if (!detailsContent.classList.contains('open')) {
@@ -457,7 +458,7 @@
             }
         });
     }
-    
+   
     function sortBranchesByTotal() {
         const container = document.getElementById('branchesContainer');
         const cards = Array.from(container.querySelectorAll('.branch-card'));
