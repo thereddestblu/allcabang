@@ -154,20 +154,22 @@
 
   <script>
     // --- KONFIGURASI ---
-    const REFRESH_INTERVAL = 90000;
-    const STATUS = { WAITING: 'waiting', IN_TREATMENT: 'in-treatment', COMPLETED: 'completed' };
-    const BRANCHES = {
-      PWT: { name: "Purwokerto", url: "https://script.google.com/macros/s/AKfycbzKpxIOF2VABpGLbDRj9-9Bi2Gwi-urycCnScYhbn26Fy2GQqQGueMyqR6X7F8fkQaO/exec" },
-      PBG: { name: "Purbalingga", url: "https://script.google.com/macros/s/AKfycbzNl_rDqQth6SYdyzhxGM41TJqbAKnU5ntBc3gOiZiaTfw06QBMEIK4ZpdZ-amHINO7/exec" },
-      PML: { name: "Pemalang", url: "https://script.google.com/macros/s/AKfycby2cEq-so0BSvjiaq_NRBtef4tjWYNzHPlmBepxruTw91ZJ0-ogmVyEPDx4onfs9LLEug/exec" },
-      CLP: { name: "Cilacap", url: "https://script.google.com/macros/s/AKfycby_IDkfLVK2M-_olnNLQYOdMyYNR8PNzl61FHSeXi3dFtNiXP_F_6RJ1i2CuWJfNPlEnA/exec" },
-      KDJ: { name: "Kedungreja", url: "https://script.google.com/macros/s/AKfycbzy9e4KtvXQ_hQWWhRBiNSHJd04__ukSJeTKXOpAZ7EQPlcsaM2z6p7lhNwhclekQ21Bw/exec" },
-      BTG: { name: "Batang", url: "https://script.google.com/macros/s/AKfycbwqqMJ4Nlb21PCPNmQy6mW-iglJ9jKB3aM-rC3Y74RTpEadGaVFpV0krkxUeqAxuU353w/exec" },
-      TSK: { name: "Tasikmalaya", url: "https://script.google.com/macros/s/AKfycbz_rWQbliw98LBgl3QNuzgFXfhN6fH2Bga0IeLCUU2S-4c6NtGHtpM9Nq7kpG5_MmwglQ/exec" },
-      KBN: { name: "Kebumen", url: "https://script.google.com/macros/s/AKfycbxpmIptOlmwe8WoA-67pkv9dNmtmX3AYdGH-D950_o7KJo-gV6nPgGWw3hX_UaHXN3r/exec" }
-    };
-    let allPatientsData = {};
-    let isSortedByTotal = false;
+   const REFRESH_INTERVAL = 90000;
+  const STATUS = { WAITING: 'waiting', IN_TREATMENT: 'in-treatment', COMPLETED: 'completed' };
+  const BRANCHES = {
+    PWT: { name: "Purwokerto", url: "https://script.google.com/macros/s/AKfycbzKpxIOF2VABpGLbDRj9-9Bi2Gwi-urycCnScYhbn26Fy2GQqQGueMyqR6X7F8fkQaO/exec" },
+    PBG: { name: "Purbalingga", url: "https://script.google.com/macros/s/AKfycbzNl_rDqQth6SYdyzhxGM41TJqbAKnU5ntBc3gOiZiaTfw06QBMEIK4ZpdZ-amHINO7/exec" },
+    PML: { name: "Pemalang", url: "https://script.google.com/macros/s/AKfycby2cEq-so0BSvjiaq_NRBtef4tjWYNzHPlmBepxruTw91ZJ0-ogmVyEPDx4onfs9LLEug/exec" },
+    CLP: { name: "Cilacap", url: "https://script.google.com/macros/s/AKfycby_IDkfLVK2M-_olnNLQYOdMyYNR8PNzl61FHSeXi3dFtNiXP_F_6RJ1i2CuWJfNPlEnA/exec" },
+    KDJ: { name: "Kedungreja", url: "https://script.google.com/macros/s/AKfycbzy9e4KtvXQ_hQWWhRBiNSHJd04__ukSJeTKXOpAZ7EQPlcsaM2z6p7lhNwhclekQ21Bw/exec" },
+    BTG: { name: "Batang", url: "https://script.google.com/macros/s/AKfycbwqqMJ4Nlb21PCPNmQy6mW-iglJ9jKB3aM-rC3Y74RTpEadGaVFpV0krkxUeqAxuU353w/exec" },
+    TSK: { name: "Tasikmalaya", url: "https://script.google.com/macros/s/AKfycbz_rWQbliw98LBgl3QNuzgFXfhN6fH2Bga0IeLCUU2S-4c6NtGHtpM9Nq7kpG5_MmwglQ/exec" },
+    KBN: { name: "Kebumen", url: "https://script.google.com/macros/s/AKfycbxpmIptOlmwe8WoA-67pkv9dNmtmX3AYdGH-D950_o7KJo-gV6nPgGWw3hX_UaHXN3r/exec" },
+    YGY: { name: "Sleman Jogja", url: "https://script.google.com/macros/s/AKfycbz3BVJzt5szJOhuudYEWPSHjr63rcmyqfKSpfZWGBQuN4kAJ3voFI9dQFYFi1JPEJTs/exec" },
+    BYU: { name: "Bumiayu", url: "https://script.google.com/macros/s/AKfycbzwG3BvxTGvx7uYmMNarkt5dcOkujJp2ixA3eGmOP5SZ8TRz4PIUbEkuoJGg-4Q2t8Rtg/exec" }
+  };
+  let allPatientsData = {};
+  let isSortedByTotal = false;
 
     // --- FUNGSI UTAMA ---
     document.addEventListener('DOMContentLoaded', init);
