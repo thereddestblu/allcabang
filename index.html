@@ -31,7 +31,7 @@
      
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; 
     } 
- 
+
     html.dark { 
       --bg-main: #000000; 
       --bg-card: #1c1c1e; 
@@ -42,7 +42,7 @@
       --highlight-bg: rgba(0, 122, 255, 0.25); 
       --skeleton-bg: #3a3a3c; 
     } 
- 
+
     body { 
       background-color: var(--bg-main); 
       color: var(--text-primary); 
@@ -50,87 +50,95 @@
       -webkit-font-smoothing: antialiased; 
       -moz-osx-font-smoothing: grayscale; 
     } 
- 
+
     .status-waiting { color: var(--status-waiting); } 
     .status-in-treatment { color: var(--status-in-treatment); } 
     .status-completed { color: var(--status-completed); } 
- 
+
     .details-content { 
       max-height: 0; 
       overflow: hidden; 
       transition: max-height 0.5s cubic-bezier(0.25, 0.1, 0.25, 1.0); 
     } 
- 
-    .details-content.open { 
-      max-height: 3000px; 
-    } 
-     
-    .toggle-arrow { 
-        transition: transform 0.3s ease-out; 
-    } 
-    .open .toggle-arrow { 
-        transform: rotate(180deg); 
-    } 
-     
-    .highlight-row { 
-        background-color: var(--highlight-bg); 
-    } 
- 
+
+    .details-content.open { max-height: 3000px; } 
+      
+    .toggle-arrow { transition: transform 0.3s ease-out; } 
+    .open .toggle-arrow { transform: rotate(180deg); } 
+      
+    .highlight-row { background-color: var(--highlight-bg); } 
+
     .skeleton { 
         background-color: var(--skeleton-bg); 
         border-radius: 0.5rem; 
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; 
     } 
- 
+
     @keyframes pulse { 
         0%, 100% { opacity: 1; } 
         50% { opacity: 0.5; } 
     } 
- 
+
     /* Styles for Summary Tooltips */ 
-    .tooltip-container { 
-        position: relative; 
-    } 
- 
+    .tooltip-container { position: relative; } 
     .tooltip { 
-        visibility: hidden; 
-        opacity: 0; 
-        position: absolute; 
-        bottom: 100%; 
-        left: 50%; 
-        transform: translateX(-50%) translateY(-10px); 
-        background-color: var(--bg-subtle); 
-        color: var(--text-secondary); 
-        padding: 8px 12px; 
-        border-radius: 8px; 
-        width: max-content; 
-        max-width: 200px; 
-        z-index: 20; 
-        font-size: 12px; 
-        font-weight: 500; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-        transition: opacity 0.2s ease-out, transform 0.2s ease-out; 
-        pointer-events: none; 
+        visibility: hidden; opacity: 0; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-10px); 
+        background-color: var(--bg-subtle); color: var(--text-secondary); padding: 8px 12px; border-radius: 8px; width: max-content; 
+        max-width: 200px; z-index: 20; font-size: 12px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out; pointer-events: none; 
     } 
-     
+      
     .tooltip-container:hover .tooltip, .tooltip-container.active .tooltip { 
-        visibility: visible; 
-        opacity: 1; 
-        transform: translateX(-50%) translateY(0); 
-    } 
+        visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); 
+    }
+
+    /* KUSTOMISASI UNTUK ATURAN (-) DAN (@) DAN (ISTIRAHAT) */
+    .bg-red-600-custom { background-color: #dc2626 !important; color: #ffffff !important; }
+    .text-yellow-200-custom { color: #fef08a !important; }
+    
+    .break-separator {
+        background-color: #450a0a !important;
+        color: #ffffff !important;
+        text-align: center;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        font-size: 0.85rem;
+    }
+
+    @keyframes fade-in-out {
+        0%, 100% { opacity: 0.2; }
+        50% { opacity: 1; }
+    }
+    .animate-fade {
+        animation: fade-in-out 2s ease-in-out infinite;
+    }
+
+    .badge-istirahat {
+        background-color: #dc2626;
+        color: white;
+        padding: 0.15rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 800;
+        margin-right: 0.5rem;
+        text-transform: uppercase;
+        vertical-align: middle;
+        display: inline-flex;
+        align-items: center;
+    }
   </style> 
 </head> 
 <body class="min-h-screen text-sm"> 
   <div class="container mx-auto p-4 max-w-6xl"> 
-     
+      
     <header class="mb-8 text-center"> 
         <h1 class="text-4xl font-bold" style="color: var(--text-primary);">Daftar Antrian</h1> 
         <p class="mt-2 text-lg" style="color: var(--text-secondary);">Bone Hacker Live Status</p> 
     </header> 
- 
+
     <section id="totalSummaryContainer" class="mb-6 p-5 rounded-2xl shadow-sm" style="background-color: var(--bg-card); border: 1px solid var(--border-color);"> 
     </section> 
- 
+
     <div class="flex flex-col sm:flex-row gap-3 mb-6 sticky top-0 py-3 z-10" style="background-color: var(--bg-main);"> 
         <div class="relative flex-grow"> 
             <input type="text" id="searchInput" placeholder="Cari nama pasien..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-blue-500 outline-none" style="background-color: var(--bg-card);"> 
@@ -143,15 +151,15 @@
             <svg id="moonIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg> 
         </button> 
     </div> 
- 
+
     <main id="branchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"> 
     </main> 
- 
+
     <footer class="text-center mt-8 text-xs" style="color: var(--text-secondary);"> 
         <p>Terakhir diperbarui: <span id="lastUpdated" class="font-semibold">-</span></p> 
     </footer> 
   </div> 
- 
+
   <script> 
     // --- KONFIGURASI --- 
     const REFRESH_INTERVAL = 90000; 
@@ -171,7 +179,7 @@
     }; 
     let allPatientsData = {}; 
     let isSortedByTotal = false; 
- 
+
     // --- FUNGSI UTAMA --- 
     document.addEventListener('DOMContentLoaded', init); 
     function init() { 
@@ -181,31 +189,31 @@
         fetchAllData(); 
         setInterval(fetchAllData, REFRESH_INTERVAL); 
     } 
- 
+
     function setupEventListeners() { 
         document.getElementById('searchInput').addEventListener('input', handleSearch); 
         document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode); 
         document.getElementById('toggleAllBtn').addEventListener('click', toggleAllDetails); 
         document.getElementById('sortBtn').addEventListener('click', sortBranchesByTotal); 
-        
+         
         document.getElementById('branchesContainer').addEventListener('click', function(e) { 
             const button = e.target.closest('.toggle-details-btn'); 
             if (!button) return; 
- 
+
             const targetContent = button.parentElement.querySelector('.details-content'); 
             const wasOpen = targetContent.classList.contains('open'); 
- 
+
             document.querySelectorAll('.details-content.open').forEach(openContent => { 
                 openContent.classList.remove('open'); 
                 openContent.parentElement.querySelector('.toggle-details-btn').classList.remove('open'); 
             }); 
-            
+             
             if (!wasOpen) { 
                 targetContent.classList.add('open'); 
                 button.classList.add('open'); 
             } 
         }); 
- 
+
         // Event for summary tooltips on mobile 
         document.getElementById('totalSummaryContainer').addEventListener('click', function(e) { 
             const container = e.target.closest('.tooltip-container'); 
@@ -221,7 +229,7 @@
             } 
         }); 
     } 
- 
+
     async function fetchAllData() { 
         const fetchPromises = Object.entries(BRANCHES).map(async ([code, branch]) => { 
             try { 
@@ -240,14 +248,14 @@
         const now = new Date().toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit', timeZone: "Asia/Jakarta" }); 
         document.getElementById('lastUpdated').textContent = `${now} WIB`; 
     } 
- 
+
     // --- RENDER & UPDATE UI --- 
     function renderAllBranchSkeletons() { 
         const container = document.getElementById('branchesContainer'); 
         container.innerHTML = Object.entries(BRANCHES).map(([code, branch]) => createBranchCard(code, branch.name, true)).join(''); 
         document.getElementById('totalSummaryContainer').innerHTML = createTotalSummary(null, true); 
     } 
- 
+
     function createBranchCard(code, name, isLoading = false) { 
         let summaryContent; 
         if (isLoading) { 
@@ -265,12 +273,15 @@
                 <div><span class="text-3xl font-bold">-</span><p class="text-sm tracking-wide" style="color: var(--text-secondary);">Total</p></div> 
             `; 
         } 
- 
+
         return ` 
             <section id="branch-${code}" class="branch-card flex flex-col rounded-2xl shadow-sm" style="background-color: var(--bg-card); border: 1px solid var(--border-color);"> 
                 <div class="p-5"> 
                     <button class="toggle-details-btn w-full flex justify-between items-center p-3 rounded-xl mb-4" style="background-color: var(--bg-subtle);"> 
-                        <h2 class="text-lg font-semibold">${name}</h2> 
+                        <h2 class="text-lg font-semibold flex items-center">
+                            <span id="rest-badge-${code}"></span>
+                            ${name}
+                        </h2> 
                         <svg class="toggle-arrow w-5 h-5 flex-shrink-0" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> 
                     </button> 
                     <div id="summary-${code}" class="grid grid-cols-4 gap-2 text-center"> 
@@ -283,22 +294,39 @@
             </section> 
         `; 
     } 
- 
+
     function updateBranchUI(code, patients, isError = false) { 
         const summaryEl = document.getElementById(`summary-${code}`); 
         const detailsEl = document.getElementById(`details-${code}`); 
- 
+        const restBadgeEl = document.getElementById(`rest-badge-${code}`);
+
         if (isError) { 
             summaryEl.innerHTML = `<div class="col-span-4 text-red-500 font-semibold p-4">Gagal memuat</div>`; 
             detailsEl.innerHTML = `<p class="text-red-500">Tidak dapat mengambil data untuk cabang ini.</p>`; 
             return; 
         } 
- 
-        const waiting = patients.filter(p => p.status === STATUS.WAITING).length; 
-        const treating = patients.filter(p => p.status === STATUS.IN_TREATMENT).length; 
-        const completed = patients.filter(p => p.status === STATUS.COMPLETED).length; 
+
+        // DETEKSI LOGIKA ISTIRAHAT
+        const safePatients = patients || [];
+        const restEntry = safePatients.find(p => p.patientName.toLowerCase().includes('istirahat'));
+        
+        if (restEntry) {
+            let timeStr = restEntry.patientName.toLowerCase().replace('istirahat', '').replace(/[()]/g, '').trim();
+            // Pembaruan format teks menjadi "ISTIRAHAT S.D. [JAM]"
+            let displayStr = timeStr ? `ISTIRAHAT S.D. ${timeStr}` : 'ISTIRAHAT';
+            restBadgeEl.innerHTML = `<span class="badge-istirahat animate-fade">${displayStr}</span>`;
+        } else {
+            restBadgeEl.innerHTML = '';
+        }
+
+        // FILTER HANYA PASIEN AKTIF (BUKAN ISTIRAHAT) UNTUK DIHITUNG & DITAMPILKAN
+        const activePatients = safePatients.filter(p => !p.patientName.toLowerCase().includes('istirahat'));
+
+        const waiting = activePatients.filter(p => p.status === STATUS.WAITING).length; 
+        const treating = activePatients.filter(p => p.status === STATUS.IN_TREATMENT).length; 
+        const completed = activePatients.filter(p => p.status === STATUS.COMPLETED).length; 
         const total = waiting + treating + completed; 
- 
+
         summaryEl.innerHTML = ` 
             <div class="pt-2" style="border-top: 3px solid var(--status-waiting);"> 
                 <span class="text-3xl font-bold status-waiting">${waiting}</span> 
@@ -317,45 +345,49 @@
                 <p class="text-sm tracking-wide font-medium" style="color: var(--text-secondary);">Total</p> 
             </div> 
         `; 
-        if (patients.length === 0) { 
+        
+        if (activePatients.length === 0) { 
             detailsEl.innerHTML = `<p style="color: var(--text-secondary);">Tidak ada antrian untuk hari ini.</p>`; 
         } else { 
-            detailsEl.innerHTML = createPatientTable(patients); 
+            detailsEl.innerHTML = createPatientTable(activePatients); 
         } 
     } 
- 
+
     function updateTotalSummary() { 
         let totalWaiting = 0, totalTreating = 0, totalCompleted = 0; 
         let waitingByBranch = [], treatingByBranch = [], completedByBranch = [], totalByBranch = []; 
- 
+
         Object.entries(allPatientsData).forEach(([code, patients]) => { 
             if (Array.isArray(patients)) { 
-                const waitingCount = patients.filter(p => p.status === STATUS.WAITING).length; 
-                const treatingCount = patients.filter(p => p.status === STATUS.IN_TREATMENT).length; 
-                const completedCount = patients.filter(p => p.status === STATUS.COMPLETED).length; 
+                // Mengecualikan istirahat dari kalkulasi total summary
+                const activePatients = patients.filter(p => !p.patientName.toLowerCase().includes('istirahat'));
+
+                const waitingCount = activePatients.filter(p => p.status === STATUS.WAITING).length; 
+                const treatingCount = activePatients.filter(p => p.status === STATUS.IN_TREATMENT).length; 
+                const completedCount = activePatients.filter(p => p.status === STATUS.COMPLETED).length; 
                 const totalCount = waitingCount + treatingCount + completedCount; 
- 
+
                 totalWaiting += waitingCount; 
                 totalTreating += treatingCount; 
                 totalCompleted += completedCount; 
- 
+
                 if (waitingCount > 0) waitingByBranch.push({ name: BRANCHES[code].name, count: waitingCount }); 
                 if (treatingCount > 0) treatingByBranch.push({ name: BRANCHES[code].name, count: treatingCount }); 
                 if (completedCount > 0) completedByBranch.push({ name: BRANCHES[code].name, count: completedCount }); 
                 if (totalCount > 0) totalByBranch.push({ name: BRANCHES[code].name, count: totalCount }); 
             } 
         }); 
-        
+         
         waitingByBranch.sort((a, b) => b.count - a.count); 
         treatingByBranch.sort((a, b) => b.count - a.count); 
         completedByBranch.sort((a, b) => b.count - a.count); 
         totalByBranch.sort((a, b) => b.count - a.count); 
- 
+
         const grandTotal = totalWaiting + totalTreating + totalCompleted; 
         const summaryHTML = createTotalSummary({ totalWaiting, totalTreating, totalCompleted, grandTotal, waitingByBranch, treatingByBranch, completedByBranch, totalByBranch }); 
         document.getElementById('totalSummaryContainer').innerHTML = summaryHTML; 
     } 
- 
+
     function createTotalSummary(totals, isLoading = false) { 
         let content; 
         if (isLoading) { 
@@ -370,7 +402,7 @@
             const treatingTooltip = totals.treatingByBranch.length > 0 ? totals.treatingByBranch.map(b => `<li>${b.name}: ${b.count}</li>`).join('') : '<li>Tidak ada yang diterapi</li>'; 
             const completedTooltip = totals.completedByBranch.length > 0 ? totals.completedByBranch.map(b => `<li>${b.name}: ${b.count}</li>`).join('') : '<li>Tidak ada yang selesai</li>'; 
             const totalTooltip = totals.totalByBranch.length > 0 ? totals.totalByBranch.map(b => `<li>${b.name}: ${b.count}</li>`).join('') : '<li>Tidak ada pasien</li>'; 
- 
+
             content = ` 
                 <div class="tooltip-container"> 
                     <span class="text-4xl font-bold status-waiting">${totals.totalWaiting}</span> 
@@ -396,7 +428,7 @@
         } 
         return `<h2 class="text-xl font-bold text-center mb-5">Ringkasan Semua Cabang</h2><div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">${content}</div>`; 
     } 
- 
+
     function createPatientTable(patients) { 
         const sorted = [...patients].sort((a, b) => (a.waitingNumber || 0) - (b.waitingNumber || 0)); 
         return ` 
@@ -412,13 +444,34 @@
                     </thead> 
                     <tbody> 
                         ${sorted.map(p => { 
-                            const desc = p.status === STATUS.IN_TREATMENT && p.description ? ` <span class="font-bold ml-1" style="color: var(--status-in-treatment);">(${sanitize(p.description)})</span>` : ''; 
+                            // IMPLEMENTASI LOGIKA (-) DAN (@)
+                            const hasDash = p.patientName.includes('-');
+                            const hasAt = p.patientName.includes('@');
+                            
+                            // Bersihkan nama dari karakter dash dan at untuk ditampilkan
+                            let displayName = p.patientName.replace('-', '').replace('@', '').trim();
+                            
+                            const desc = p.status === STATUS.IN_TREATMENT && p.description ? ` <span class="font-bold ml-1 opacity-80" style="color: var(--status-in-treatment);">(${sanitize(p.description)})</span>` : ''; 
+                            
+                            // Jika ada @, sisipkan row pembatas sebelum baris pasien tersebut
+                            const separator = hasAt ? `
+                                <tr class="break-separator">
+                                    <td colspan="4" class="p-2 py-3">↓ SETELAH ISTIRAHAT ↓</td>
+                                </tr>
+                            ` : '';
+
+                            // Styling berdasarkan rules
+                            const rowClass = hasDash ? 'bg-red-600-custom' : '';
+                            const statusClass = hasDash ? 'text-white' : `status-${p.status}`;
+                            const queueClass = hasDash ? 'text-yellow-200-custom' : '';
+
                             return ` 
-                            <tr class="border-b" style="border-color: var(--bg-subtle);"> 
+                            ${separator}
+                            <tr class="border-b ${rowClass}" style="${hasDash ? '' : 'border-color: var(--bg-subtle);'}"> 
                                 <td class="p-2 font-semibold">${sanitize(p.waitingNumber)}</td> 
-                                <td class="p-2">${sanitize(p.patientName)}${desc}</td> 
-                                <td class="p-2 font-semibold status-${p.status}">${translateStatus(p.status)}</td> 
-                                <td class="p-2 text-center font-semibold">${p.status === STATUS.WAITING ? sanitize(p.queuePosition) : '-'}</td> 
+                                <td class="p-2">${sanitize(displayName)}${desc}</td> 
+                                <td class="p-2 font-semibold ${statusClass}">${translateStatus(p.status)}</td> 
+                                <td class="p-2 text-center font-semibold ${queueClass}">${p.status === STATUS.WAITING ? sanitize(p.queuePosition) : '-'}</td> 
                             </tr> 
                             `; 
                         }).join('')} 
@@ -427,11 +480,11 @@
             </div> 
         `; 
     } 
- 
+
     function handleSearch(e) { 
         const searchTerm = e.target.value.toLowerCase().trim(); 
         document.querySelectorAll('.highlight-row').forEach(row => row.classList.remove('highlight-row')); 
- 
+
         document.querySelectorAll('.branch-card').forEach(card => { 
             const code = card.id.split('-')[1]; 
             const patients = allPatientsData[code]; 
@@ -439,7 +492,7 @@
                 card.style.display = 'flex'; 
                 return; 
             } 
-  
+ 
             const matchingPatients = patients.filter(p => p.patientName.toLowerCase().includes(searchTerm)); 
             const hasMatch = matchingPatients.length > 0; 
             card.style.display = hasMatch ? 'flex' : 'none'; 
@@ -451,7 +504,7 @@
                     detailsContent.classList.add('open'); 
                 } 
                 setTimeout(() => { 
-                    const tableRows = card.querySelectorAll('tbody tr'); 
+                    const tableRows = card.querySelectorAll('tbody tr:not(.break-separator)'); 
                     tableRows.forEach(row => { 
                         const patientNameCell = row.children[1]; 
                         if (patientNameCell && patientNameCell.textContent.toLowerCase().includes(searchTerm)) { 
@@ -462,12 +515,12 @@
             } 
         }); 
     } 
-    
+     
     function sortBranchesByTotal() { 
         const container = document.getElementById('branchesContainer'); 
         const cards = Array.from(container.querySelectorAll('.branch-card')); 
         const sortBtn = document.getElementById('sortBtn'); 
- 
+
         isSortedByTotal = !isSortedByTotal; 
         if (isSortedByTotal) { 
             cards.sort((a, b) => { 
@@ -496,7 +549,7 @@
         } 
         cards.forEach(card => container.appendChild(card)); 
     } 
- 
+
     function toggleAllDetails() { 
         const btn = document.getElementById('toggleAllBtn'); 
         const isOpening = btn.textContent === 'Buka Semua'; 
@@ -516,7 +569,7 @@
         }); 
         btn.textContent = isOpening ? 'Tutup Semua' : 'Buka Semua'; 
     } 
- 
+
     function setupDarkMode() { 
         const hour = new Date().getHours(); 
         const isNight = hour >= 18 || hour < 6; 
@@ -528,13 +581,13 @@
             updateDarkModeIcons(false); 
         } 
     } 
- 
+
     function toggleDarkMode() { 
         const isDark = document.documentElement.classList.toggle('dark'); 
         localStorage.setItem('darkMode', isDark); 
         updateDarkModeIcons(isDark); 
     } 
- 
+
     function updateDarkModeIcons(isDark) { 
         document.getElementById('sunIcon').style.display = isDark ? 'none' : 'block'; 
         document.getElementById('moonIcon').style.display = isDark ? 'block' : 'none'; 
@@ -543,12 +596,12 @@
             sortBtn.style.color = isDark ? '#f5f5f7' : '#1d1d1f'; 
         } 
     } 
- 
+
     function translateStatus(status) { 
         const map = { [STATUS.WAITING]: 'Menunggu', [STATUS.IN_TREATMENT]: 'Terapi', [STATUS.COMPLETED]: 'Selesai' }; 
         return map[status] || status; 
     } 
- 
+
     function sanitize(str) { 
         if (!str) return ''; 
         const temp = document.createElement('div'); 
